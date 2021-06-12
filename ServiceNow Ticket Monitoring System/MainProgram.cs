@@ -26,6 +26,7 @@ namespace ServiceNow_Ticket_Monitoring_System
 		static void Main(string[] args)
 		{
 			Console.WriteLine("Hello World!");
+			Console.WriteLine("Welcome to ServiceNow Automation with Selenium");
 			MainProgram mainP = new MainProgram();
 			mainP.Invoking();
 		}

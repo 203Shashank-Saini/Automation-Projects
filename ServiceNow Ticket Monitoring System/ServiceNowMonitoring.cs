@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -19,6 +20,9 @@ namespace ServiceNow_Ticket_Monitoring_System
             string website = "";
             string username = "";
             string password = "";
+            string searchParameter1 = "";
+            string searchValue1 = "";
+
             bool checkLoginPage = false;
             chromeDriver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
 
@@ -30,6 +34,9 @@ namespace ServiceNow_Ticket_Monitoring_System
                 website = node.SelectSingleNode("WebsiteURL").InnerText;
                 username = node.SelectSingleNode("Username").InnerText;
                 password = node.SelectSingleNode("Password").InnerText;
+                searchParameter1 = node.SelectSingleNode("SearchParameter1").InnerText;
+                searchValue1 = node.SelectSingleNode("SearchValue1").InnerText;
+
             }
 
             Console.WriteLine(website + " " + username + " " + password);
@@ -76,6 +83,7 @@ namespace ServiceNow_Ticket_Monitoring_System
             IWebElement btnIncidents = chromeDriver.FindElement(By.XPath("//*[@id='4fed4395c0a8016400fcf06c27b1e6c6']/div/div"));
             btnIncidents.Click();
 
+
             chromeDriver.SwitchTo().Frame("gsft_main");     //switching the iFrame
             IWebElement btnFilterIncidents = chromeDriver.FindElement(By.XPath("//*[@id='incident_filter_toggle_image']"));
             btnFilterIncidents.Click();
@@ -84,12 +92,61 @@ namespace ServiceNow_Ticket_Monitoring_System
             btnFilterAND.Click();
 
 
+            
+
+            IWebElement FilterOne = chromeDriver.FindElement(By.XPath("//*[@id='select2-chosen-4']"));       //.FindElement(By.XPath("//*[contains(@id, 'QUERYPART')]/tr[4]//*[contains(@id,'select2-chosen']"));
+            FilterOne.Click();
+            IWebElement AssignmentGroupSearch = chromeDriver.FindElement(By.XPath("//*[@id='s2id_autogen4_search']"));       //.FindElement(By.XPath("//*[contains(@id, 'QUERYPART')]/tr[4]//*[contains(@id,'select2-chosen']"));
+            AssignmentGroupSearch.Click();
+            AssignmentGroupSearch.SendKeys(searchParameter1);
+            AssignmentGroupSearch.SendKeys(Keys.Enter);
+            
+            IWebElement AssignmentGroupName = chromeDriver.FindElement(By.XPath("//*[contains(@id, 'sys_display.incident.assignment_group')]"));       //.FindElement(By.XPath("//*[contains(@id, 'QUERYPART')]/tr[4]//*[contains(@id,'select2-chosen']"));
+            AssignmentGroupName.SendKeys(searchValue1);
+            Thread.Sleep(5000);
+            AssignmentGroupName.SendKeys(Keys.Down);
+            AssignmentGroupName.SendKeys(Keys.Tab);
 
 
+            IWebElement btnFilterRUN = chromeDriver.FindElement(By.XPath("//*[@id='test_filter_action_toolbar_run']"));
+            btnFilterRUN.Click();
+
+            IWebElement btnIncidentRowControl = chromeDriver.FindElement(By.XPath("//*[@id='incident_control_button']"));
+            btnIncidentRowControl.Click();
+            IWebElement btnIncidentRowShow= chromeDriver.FindElement(By.XPath("//*[@id='context_list_titleincident']/div[5]"));
+            btnIncidentRowShow.Click();
+            IWebElement btnIncidentRowShow100 = chromeDriver.FindElement(By.XPath("//*[contains(@id,'_incident')]/div[6]"));
+            btnIncidentRowShow100.Click();
+
+            //I was getting StaleElementReferenceException because the chrome driver was forgetting the element, this was happening because the code was
+            //running faster, and the table was refreshing after the element was found once..
+            //Let the elements load properly first otherwise a refresh of elements or change in elements will cause StaleElementReferenceException
+
+            Thread.Sleep(5000); //Explicit wait is used to pause for a moment and let the table refresh properly after the previous command
 
 
+            IWebElement IncidentTable = chromeDriver.FindElement(By.XPath("//*[@id='incident_table']/tbody"));
+            List<IWebElement> IncidentTableRows = IncidentTable.FindElements(By.TagName("tr")).ToList();
+            if (IncidentTableRows.Count > 0)
+            {
+                foreach (IWebElement row in IncidentTableRows)
+                {
+                    int count = 1;
+                    List<IWebElement> columns = row.FindElements(By.TagName("td")).ToList();
+
+                    Console.WriteLine(columns.ElementAt(2).Text);
+                    
+                    IWebElement Column3 = row.FindElement(By.XPath("//table / tbody / tr[" + count + "] / td[3]"));
+                    List<IWebElement> Links11 = Column3.FindElements(By.TagName("a")).ToList();
+                    foreach (IWebElement links in Links11)
+                    {
+                        Console.WriteLine(links.GetAttribute("href").ToString());
+                    }
+                    count++;
+                }
 
 
+            }
 
             Console.WriteLine("Done");
             return "Done";
@@ -97,47 +154,3 @@ namespace ServiceNow_Ticket_Monitoring_System
 
     }
 }
-
-
-/*
-DYNAMIC ID, XPATH NOT WORKING - At this situation, We have lots of options-
-
-Option 1: Look for any other attribute which Is not changing every time In that div node like name, class etc. So If this div node has class attribute then we can write xpath as bellow.
-//div[@class='post-body entry-content']/div[1]/form[1]/input[1] 
-
-Option 2: We can use absolute xpath (full xpath) where you do not need to give any attribute names In xpath.
-/html/body/div[3]/ div[2] / div[2] / div[2] / div[2] / div[2] / div[2] / div / div[4] / div[1] / div / div / div / div[1] / div / div / div / div[1] / div[2] / div[1] / form[1] / input[1]
-
-Option 3: We can use starts-with function. In this xpath's ID attribute, "post-body-" part remains same every time.
- //div[starts-with(@id,'post-body-')]/div[1]/form[1]/input[1] 
-
-Option 4: We can use contains function. Same way you can use contains function as bellow.
- div[contains(@id, 'post-body-')]/ div[1] / form[1] / input[1] 
-
-
-
-//_____________________________________________________________________________________________________
-
-
- You've got:
-
-//*[contains(@id, 'ctl00_btnAircraftMapCell')]//*[contains(@title, 'Select Seat')]
-Which translates into:
-
-Get me all the elements that have an ID that contains ctl00_btnAircraftMapCell. Out of these elements, get any child elements that have a title that contains Select Seat.
-
-What you actually want is:
-
-//a[contains(@id, 'ctl00_btnAircraftMapCell') and contains(@title, 'Select Seat')]
-Which translates into:
-
-Get me all the anchor elements that have both: an id that contains ctl00_btnAircraftMapCell and a title that contains Select Seat.
-
- 
- 
- 
- 
- 
- 
- 
- */
