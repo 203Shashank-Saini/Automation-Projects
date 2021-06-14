@@ -11,3 +11,8 @@
  PLESSE MAKE SURE TO EDIT THE Configuration.xml, BEFORE RUNNING THE CODE.
 	
 *****************************************************************************************************************************
+# Selenium c# Web Automation
+# SMTP email notifications
+# Service now Automation project with Selenium c#
+# Selenium c# with screenshots functionality
+# Automation project with NUnit testing framework

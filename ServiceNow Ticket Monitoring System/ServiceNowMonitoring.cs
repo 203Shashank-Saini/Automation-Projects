@@ -15,13 +15,15 @@ namespace ServiceNow_Ticket_Monitoring_System
     //*****************************************************************************************************************************
     class ServiceNowMonitoring : MainProgram
     {
-        public string InvestigateServiceNow(ChromeDriver chromeDriver)
+        public List<INCdetails> InvestigateServiceNow(ChromeDriver chromeDriver)
         {
             string website = "";
             string username = "";
             string password = "";
             string searchParameter1 = "";
             string searchValue1 = "";
+
+            List<INCdetails> INCdetailsList = new List<INCdetails>();
 
             bool checkLoginPage = false;
             chromeDriver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
@@ -39,8 +41,8 @@ namespace ServiceNow_Ticket_Monitoring_System
 
             }
 
-            Console.WriteLine(website + " " + username + " " + password);
-
+            //Console.WriteLine(website + " " + username + " " + password);
+            
             chromeDriver.Navigate().GoToUrl(website);   //Navigating to the website, please edit this value in configration.xml
 
             //NOTE : XPath generally have the id(s) enclosed by double inverted commas "" , Change them to single inverted commas '' , e.g //*[@id="user_name"]"   -->  //*[@id='user_name']"
@@ -87,14 +89,14 @@ namespace ServiceNow_Ticket_Monitoring_System
             chromeDriver.SwitchTo().Frame("gsft_main");     //switching the iFrame
             IWebElement btnFilterIncidents = chromeDriver.FindElement(By.XPath("//*[@id='incident_filter_toggle_image']"));
             btnFilterIncidents.Click();
-
+            Thread.Sleep(2000);
             IWebElement btnFilterAND = chromeDriver.FindElement(By.XPath("//*[contains(@id, 'filterdiv')]/list_filter/div[1]/button[3]"));
             btnFilterAND.Click();
 
 
             
 
-            IWebElement FilterOne = chromeDriver.FindElement(By.XPath("//*[@id='select2-chosen-4']"));       //.FindElement(By.XPath("//*[contains(@id, 'QUERYPART')]/tr[4]//*[contains(@id,'select2-chosen']"));
+            IWebElement FilterOne = chromeDriver.FindElement(By.XPath("//*[@id='select2-chosen-4']"));       
             FilterOne.Click();
             IWebElement AssignmentGroupSearch = chromeDriver.FindElement(By.XPath("//*[@id='s2id_autogen4_search']"));       //.FindElement(By.XPath("//*[contains(@id, 'QUERYPART')]/tr[4]//*[contains(@id,'select2-chosen']"));
             AssignmentGroupSearch.Click();
@@ -103,7 +105,7 @@ namespace ServiceNow_Ticket_Monitoring_System
             
             IWebElement AssignmentGroupName = chromeDriver.FindElement(By.XPath("//*[contains(@id, 'sys_display.incident.assignment_group')]"));       //.FindElement(By.XPath("//*[contains(@id, 'QUERYPART')]/tr[4]//*[contains(@id,'select2-chosen']"));
             AssignmentGroupName.SendKeys(searchValue1);
-            Thread.Sleep(5000);
+            Thread.Sleep(3000);
             AssignmentGroupName.SendKeys(Keys.Down);
             AssignmentGroupName.SendKeys(Keys.Tab);
 
@@ -122,35 +124,61 @@ namespace ServiceNow_Ticket_Monitoring_System
             //running faster, and the table was refreshing after the element was found once..
             //Let the elements load properly first otherwise a refresh of elements or change in elements will cause StaleElementReferenceException
 
-            Thread.Sleep(5000); //Explicit wait is used to pause for a moment and let the table refresh properly after the previous command
+            Thread.Sleep(3000); //Explicit wait is used to pause for a moment and let the table refresh properly after the previous command
 
+            TakeScreenshot(chromeDriver);
 
             IWebElement IncidentTable = chromeDriver.FindElement(By.XPath("//*[@id='incident_table']/tbody"));
             List<IWebElement> IncidentTableRows = IncidentTable.FindElements(By.TagName("tr")).ToList();
             if (IncidentTableRows.Count > 0)
             {
+                int count = 1;
                 foreach (IWebElement row in IncidentTableRows)
                 {
-                    int count = 1;
-                    List<IWebElement> columns = row.FindElements(By.TagName("td")).ToList();
-
-                    Console.WriteLine(columns.ElementAt(2).Text);
                     
+                    List<IWebElement> columns = row.FindElements(By.TagName("td")).ToList();
+                    
+                    Console.WriteLine(columns.ElementAt(2).Text);
+
+                    string INClink = "";
                     IWebElement Column3 = row.FindElement(By.XPath("//table / tbody / tr[" + count + "] / td[3]"));
                     List<IWebElement> Links11 = Column3.FindElements(By.TagName("a")).ToList();
                     foreach (IWebElement links in Links11)
                     {
                         Console.WriteLine(links.GetAttribute("href").ToString());
+                        INClink = links.GetAttribute("href").ToString();
                     }
+                    INCdetailsList.Add( new INCdetails { IncidentNumber = columns.ElementAt(2).Text, IncidentLink = INClink } );
+
+
                     count++;
+
                 }
 
 
             }
 
             Console.WriteLine("Done");
-            return "Done";
+            return INCdetailsList;
         }
 
+        private void TakeScreenshot(ChromeDriver chromeDriver)
+        {
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+
+            string subPath = path + "//Screenshots";
+
+            bool exists = System.IO.Directory.Exists(subPath);
+
+            if (!exists)
+                System.IO.Directory.CreateDirectory(subPath);
+
+            DateTime dateTime = DateTime.UtcNow;
+            string screenshot_name = "Image" + dateTime.ToString("dd-MM-yyyy-hh-mm");
+
+            Screenshot ss = ((ITakesScreenshot)chromeDriver).GetScreenshot();
+            ss.SaveAsFile(path + "//Screenshots//" + screenshot_name + ".png",
+            ScreenshotImageFormat.Png);
+        }
     }
 }

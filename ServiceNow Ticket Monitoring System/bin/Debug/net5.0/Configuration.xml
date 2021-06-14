@@ -1,13 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Configurations>
 
-<WebsiteURL>https://dev105819.service-now.com/</WebsiteURL>
-  <Username>admin</Username>
-  <Password>6Bsx6GUaMoPn</Password>
+  
+<WebsiteURL>_____________</WebsiteURL>
+  <Username>_____________</Username>
+  <Password>_____________</Password>
   <SearchParameter1>Assignment Group</SearchParameter1>
-  <SearchValue1>Software</SearchValue1>
+  <SearchValue1>Network</SearchValue1>
   <FullName>Shashank Saini</FullName>
   <FromEmail>shashanksaini203@gmail.com</FromEmail>
   <ToEmail>shashanksaini203@gmail.com</ToEmail>
+  <CCemail>shashanksaini203@gmail.com</CCemail>
   
 </Configurations>
